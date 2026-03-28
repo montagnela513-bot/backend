@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>La Montagne Admin Ultimate Plus</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Noto+Serif+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f6f2;--card:#fff;--text:#2b2b2b;--muted:#767676;--line:#e7e7e2;--brand:#6f8f74;--shadow:0 10px 30px rgba(0,0,0,.06);--radius:14px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Serif TC",serif}
+.wrap{max-width:1320px;margin:0 auto;padding:32px 24px 60px}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;gap:12px;flex-wrap:wrap}.logo{font-family:"Playfair Display",serif;font-size:34px}.muted{color:var(--muted)}
+.grid{display:grid;grid-template-columns:280px 1fr;gap:20px}.card{background:var(--card);box-shadow:var(--shadow);border-radius:var(--radius);padding:20px}.menu button,.btn,.btn-sm{border:none;border-radius:12px;font-family:inherit;cursor:pointer}.menu button,.btn{width:100%;padding:12px 14px}.menu button{background:#f2f4ef;color:#344;margin-bottom:10px}.btn{background:var(--brand);color:#fff}.btn.secondary{background:#eef2ed;color:#314}.btn-sm{background:#eef2ed;color:#314;padding:8px 10px}
+input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-family:inherit;margin-bottom:10px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.login-box{max-width:440px;margin:80px auto;background:#fff;box-shadow:var(--shadow);border-radius:16px;padding:28px}.hidden{display:none!important}.tag{display:inline-block;background:#eef3ee;border-radius:999px;padding:4px 10px;font-size:12px;margin:2px 6px 2px 0}
+.password-wrap{position:relative}.password-wrap input{padding-right:92px}.toggle-pass-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:#eef2ed;color:#455;border:none;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
+.filter-bar{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;margin-bottom:12px}.detail-box{background:#fafaf7;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}.inventory-grid{display:grid;grid-template-columns:1.5fr .7fr auto;gap:10px;align-items:center}.subtle{font-size:12px;color:var(--muted)}.status-actions{display:flex;gap:8px;align-items:center}.pill{display:inline-block;background:#eef2ed;border-radius:999px;padding:4px 10px;font-size:12px}
+@media (max-width:960px){.grid{grid-template-columns:1fr}.filter-bar,.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="loginView" class="login-box">
+  <div class="logo" style="font-size:28px;margin-bottom:10px">La Montagne Admin</div>
+  <div class="muted" style="margin-bottom:14px">登入後可查看訂單、會員、發送點數與優惠券</div>
+  <input id="adminUsername" placeholder="後台帳號">
+  <div class="password-wrap"><input id="adminPassword" type="password" placeholder="後台密碼"><button type="button" class="toggle-pass-btn" onclick="togglePassword('adminPassword', this)">顯示</button></div>
+  <button class="btn" onclick="adminLogin()">登入</button><div id="loginMsg" class="muted" style="margin-top:10px"></div>
+</div>
+
+<div id="dashboardView" class="hidden">
+  <div class="wrap">
+    <div class="header"><div><div class="logo">La Montagne Admin</div><div class="muted">會員與訂單管理後台</div></div><button class="btn secondary" style="width:auto" onclick="logoutAdmin()">登出</button></div>
+    <div class="grid">
+      <div class="card menu">
+        <button onclick="showPanel('orders')">訂單列表</button>
+        <button onclick="showPanel('members')">會員列表</button>
+        <button onclick="showPanel('points')">發送點數</button>
+        <button onclick="showPanel('coupon')">優惠券管理</button>
+        <button onclick="showPanel('inventory')">庫存 / 日期管理</button>
+        <button onclick="showPanel('timeslots')">取貨時間開關</button>
+        <button onclick="showPanel('segments')">標籤分群</button>
+        <button onclick="showPanel('admin')">後台帳密設定</button>
+      </div>
+
+      <div class="card">
+        <div id="ordersPanel">
+          <h2>訂單列表</h2>
+          <div class="filter-bar">
+            <input id="orderSearchEmail" list="memberEmailList" placeholder="Email">
+            <input id="orderSearchId" placeholder="訂單編號">
+            <select id="orderPaymentFilter"><option value="">全部付款狀態</option><option value="未付款">未付款</option><option value="已回報待核帳">已回報待核帳</option><option value="已付款">已付款</option><option value="已取消">已取消</option></select>
+            <select id="orderStatusFilter"><option value="">全部訂單狀態</option><option value="待確認">待確認</option><option value="製作中">製作中</option><option value="可取貨">可取貨</option><option value="已完成">已完成</option><option value="已取消">已取消</option></select>
+            <button class="btn secondary" style="width:auto" onclick="loadOrders()">篩選</button>
+          </div>
+          <div style="overflow:auto"><table><thead><tr><th>訂單編號</th><th>客人</th><th>取貨</th><th>金額</th><th>付款狀態</th><th>訂單狀態</th><th>操作</th></tr></thead><tbody id="ordersTable"></tbody></table></div>
+          <div id="orderDetailBox" class="detail-box hidden"></div>
+        </div>
+
+        <div id="membersPanel" class="hidden">
+          <h2>會員列表</h2>
+          <div class="row"><div><input id="memberSearchEmail" list="memberEmailList" placeholder="可直接輸入或下拉選會員"><button class="btn secondary" onclick="filterMembers()">搜尋會員</button></div><button class="btn secondary" style="width:auto" onclick="loadMembers()">重新整理會員</button></div>
+          <datalist id="memberEmailList"></datalist>
+          <div style="overflow:auto"><table><thead><tr><th>會員編號</th><th>姓名</th><th>Email</th><th>手機</th><th>生日</th><th>點數</th><th>優惠券 / 標籤</th></tr></thead><tbody id="membersTable"></tbody></table></div>
+        </div>
+
+        <div id="pointsPanel" class="hidden">
+          <h2>點數管理</h2>
+          <div class="detail-box">
+            <strong>單一會員</strong>
+            <input id="pointsEmail" list="memberEmailList" placeholder="會員 Email">
+            <input id="pointsValue" type="number" placeholder="要加 / 收回的點數，例如 100 或 -100">
+            <div class="muted" style="margin:-4px 0 10px">輸入負數可強制收回點數</div>
+            <button class="btn" onclick="addPoints()">送出點數</button>
+          </div>
+          <div class="detail-box">
+            <strong>依標籤批次寄送點數</strong>
+            <select id="pointsTagBulk"></select>
+            <input id="pointsBulkValue" type="number" placeholder="要加 / 收回的點數，例如 50 或 -50">
+            <div class="muted" style="margin:-4px 0 10px">輸入負數可批次強制收回點數</div>
+            <button class="btn secondary" onclick="bulkAddPointsByTag()">批次送出點數</button>
+          </div>
+          <div id="pointsMsg" class="muted" style="margin-top:10px"></div>
+        </div>
+
+        <div id="couponPanel" class="hidden">
+          <h2>優惠券管理</h2>
+          <div class="detail-box" style="margin-bottom:14px">
+            <strong>建立優惠券與規則</strong>
+            <input id="customCouponCode" placeholder="優惠券代碼，例如 VIP200">
+            <textarea id="customCouponRule" placeholder="優惠規則，例如 滿 1000 折 200，每人限用一次"></textarea>
+            <div class="row">
+              <select id="customCouponType">
+                <option value="fixed">固定金額折扣</option>
+                <option value="percent">百分比折扣</option>
+              </select>
+              <input id="customCouponValue" type="number" placeholder="折扣值，例如 200 或 10">
+            </div>
+            <input id="customCouponMinSpend" type="number" placeholder="低消，例如 1000">
+            <button class="btn secondary" onclick="createCouponRule()">建立優惠券規則</button>
+            <div id="customCouponMsg" class="muted"></div>
+          </div>
+          <div class="detail-box" style="margin-bottom:14px">
+            <strong>優惠券總覽</strong>
+            <div id="couponOverview" class="subtle">載入中...</div>
+          </div>
+          <div class="detail-box">
+            <strong>發送給特定客戶</strong>
+            <input id="couponEmailAdmin" list="memberEmailList" placeholder="會員 Email">
+            <select id="couponCodeAdmin"></select>
+            <button class="btn" onclick="grantCoupon()">發送優惠券</button>
+          </div>
+          <div class="detail-box">
+            <strong>依標籤批次寄送優惠券</strong>
+            <select id="couponTagBulk"></select>
+            <select id="couponCodeBulk"></select>
+            <button class="btn secondary" onclick="bulkGrantCouponByTag()">批次發送優惠券</button>
+          </div>
+          <div id="couponMsgAdmin" class="muted" style="margin-top:10px"></div>
+        </div>
+
+        <div id="inventoryPanel" class="hidden">
+          <h2>日期管理（含庫存與取貨時間）</h2>
+          <div class="detail-box" style="margin-bottom:14px">
+            <strong>關閉取貨日期</strong>
+            <input id="closedDateInput" type="date"><textarea id="closedDateNote" placeholder="備註（選填）"></textarea>
+            <button class="btn" onclick="closePickupDate()">關閉該日期</button><div id="dateMsg" class="muted" style="margin-top:10px"></div>
+            <div id="closedDatesOverview" class="subtle" style="margin-top:8px"></div>
+          </div>
+          <div class="detail-box">
+            <strong>每日每品項剩餘量管理</strong>
+            <div class="row">
+              <input id="inventoryDate" type="date">
+              <button class="btn secondary" onclick="loadInventoryEditor()" style="width:auto">載入該日期庫存</button>
+            </div>
+            <div id="inventoryEditor" class="subtle">請先選日期，再載入該日期所有品項的剩餘量。</div>
+            <div id="inventoryMsg" class="muted"></div>
+          </div>
+        </div>
+
+        <div id="timeslotsPanel" class="hidden">
+          <h2>取貨時間開關</h2>
+          <div class="detail-box">
+            <input id="timeslotDate" type="date">
+            <textarea id="timeslotValues" placeholder="請輸入可取貨時間，用逗號分隔，例如 10:00,10:30,11:00"></textarea>
+            <button class="btn" onclick="saveTimeSlotsAdmin()">儲存該日可取貨時段</button>
+            <button class="btn secondary" onclick="loadTimeSlotsAdmin()" style="margin-top:10px">載入該日設定</button>
+            <div id="timeslotMsg" class="muted" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div id="segmentsPanel" class="hidden">
+          <h2>標籤分群</h2>
+          <div class="detail-box">
+            <input id="tagName" placeholder="建立新標籤，例如 VIP、企業客、常回購">
+            <button class="btn secondary" onclick="createTag()">建立標籤</button>
+            <div id="tagMsg" class="muted"></div>
+          </div>
+          <div class="detail-box" style="margin-top:14px">
+            <strong>現有標籤總覽</strong>
+            <div id="tagsOverview" class="subtle">載入中...</div>
+          </div>
+          <div class="detail-box">
+            <input id="tagMemberEmail" list="memberEmailList" placeholder="會員 Email">
+            <select id="assignTagName"></select>
+            <button class="btn" onclick="assignTag()">指派標籤</button>
+          </div>
+        </div>
+
+        <div id="adminPanel" class="hidden">
+          <h2>後台帳密設定</h2>
+          <input id="currentAdminUsername" placeholder="目前帳號">
+          <div class="password-wrap"><input id="currentAdminPassword" type="password" placeholder="目前密碼"><button type="button" class="toggle-pass-btn" onclick="togglePassword('currentAdminPassword', this)">顯示</button></div>
+          <input id="newAdminUsername" placeholder="新帳號">
+          <div class="password-wrap"><input id="newAdminPassword" type="password" placeholder="新密碼"><button type="button" class="toggle-pass-btn" onclick="togglePassword('newAdminPassword', this)">顯示</button></div>
+          <button class="btn" onclick="updateAdminCredentials()">更新後台帳密</button><div id="adminMsg" class="muted" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyaw7kRGqiMvRzjwjQOTABwslQPd2Ykn7_QezJjBKdwedfP3jLyWIl9cg2Uarz-OZJ3ig/exec";let allOrders=[],allMembers=[],pendingStatusChanges={};
+function togglePassword(id,btn){const i=document.getElementById(id);if(i.type==='password'){i.type='text';btn.textContent='隱藏'}else{i.type='password';btn.textContent='顯示'}}
+function showPanel(name){["orders","members","points","coupon","inventory","timeslots","segments","admin"].forEach(k=>document.getElementById(`${k}Panel`).classList.add("hidden"));document.getElementById(name+"Panel").classList.remove("hidden")}
+async function adminLogin(){const username=document.getElementById("adminUsername").value.trim(),password=document.getElementById("adminPassword").value.trim(),msg=document.getElementById("loginMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"adminLogin",username,password})}).then(r=>r.json()).catch(()=>({ok:false}));if(!res.ok){msg.textContent="帳號或密碼錯誤";return}sessionStorage.setItem("lm_admin_logged_in","1");document.getElementById("loginView").classList.add("hidden");document.getElementById("dashboardView").classList.remove("hidden");await loadMembers();await loadOrders()}
+function logoutAdmin(){sessionStorage.removeItem("lm_admin_logged_in");location.reload()}
+function fillEmailDatalist(){document.getElementById("memberEmailList").innerHTML=allMembers.map(m=>`<option value="${m.email}">${m.name}</option>`).join("")}
+function renderPaymentOptions(current){const opts=["未付款","已回報待核帳","已付款","已取消"];return opts.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("")}
+function renderOrderOptions(current){const opts=["待確認","製作中","可取貨","已完成","已取消"];return opts.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("")}
+async function loadOrders(){const email=document.getElementById("orderSearchEmail").value.trim(),orderId=document.getElementById("orderSearchId").value.trim(),paymentFilter=document.getElementById("orderPaymentFilter").value,statusFilter=document.getElementById("orderStatusFilter").value,tbody=document.getElementById("ordersTable");const res=await fetch(`${SCRIPT_URL}?action=listOrders${email?`&email=${encodeURIComponent(email)}`:""}${orderId?`&orderId=${encodeURIComponent(orderId)}`:""}`).then(r=>r.json()).catch(()=>({ok:false,orders:[]}));if(!res.ok){tbody.innerHTML=`<tr><td colspan="7">無法載入訂單</td></tr>`;return}allOrders=(res.orders||[]).filter(o=>(!paymentFilter||o.paymentStatus===paymentFilter)&&(!statusFilter||o.orderStatus===statusFilter));tbody.innerHTML=allOrders.length?allOrders.map(o=>`<tr><td><button class="btn-sm" onclick='showOrderDetail(${JSON.stringify(o).replace(/'/g,"&apos;")})'>${o.orderId||""}</button></td><td>${o.customerName||""}<br><a href="mailto:${o.email}">${o.email||""}</a></td><td>${o.pickupDate||""} ${o.pickupTime||""}<br><span class="muted">${o.pickupMethod||""}</span></td><td>NT$ ${Number(o.finalTotal||0).toLocaleString("zh-TW")}</td><td><select onchange="stageStatusChange('${o.orderId}','payment',this.value)">${renderPaymentOptions(o.paymentStatus)}</select></td><td><select onchange="stageStatusChange('${o.orderId}','order',this.value)">${renderOrderOptions(o.orderStatus)}</select></td><td><button class="btn-sm" onclick="confirmStatusChange('${o.orderId}','${o.email}')">確認變更</button><button class="btn-sm" onclick="deleteAnyOrder('${o.orderId}')">刪除</button></td></tr>`).join(""):`<tr><td colspan="7">目前沒有訂單</td></tr>`}
+function stageStatusChange(orderId,type,value){if(!pendingStatusChanges[orderId])pendingStatusChanges[orderId]={};pendingStatusChanges[orderId][type]=value}
+async function confirmStatusChange(orderId,email){const pending=pendingStatusChanges[orderId]||{};if(!pending.payment&&!pending.order){alert("請先選擇要更新的狀態");return}if(!confirm("確定要更新此訂單狀態嗎？"))return;const payload={action:"updateOrderStatus",orderId,paymentStatus:pending.payment||"",orderStatus:pending.order||""};const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(payload)}).then(r=>r.json()).catch(()=>({ok:false,message:"更新失敗"}));alert(res.ok?"狀態已更新，請記得由後端寄信通知消費者":(res.message||"更新失敗"));if(res.ok)delete pendingStatusChanges[orderId];loadOrders()}
+function showOrderDetail(order){document.getElementById("orderDetailBox").classList.remove("hidden");document.getElementById("orderDetailBox").innerHTML=`<strong>訂單編號：</strong>${order.orderId}<br><strong>客人：</strong>${order.customerName||""} / <a href="mailto:${order.email}">${order.email||""}</a><br><strong>電話：</strong>${order.phone||""}<br><strong>取貨日期：</strong>${order.pickupDate||""} ${order.pickupTime||""}<br><strong>付款狀態：</strong>${order.paymentStatus||""}<br><strong>訂單狀態：</strong>${order.orderStatus||""}<br><strong>已使用點數：</strong>${order.usedPoints||0}<br><strong>匯款人：</strong>${order.payerName||""}<br><strong>帳號後五碼：</strong>${order.bankLast5||""}<br><strong>匯款時間：</strong>${order.transferTime||""}<br><strong>明細：</strong>${(order.items||[]).map(i=>`<div>• ${i.name}｜${i.sizeLabel||""}${i.mousse?"｜"+i.mousse:""}｜x${i.qty}</div>`).join("")||"<div>無</div>"}`}
+async function loadMembers(){const tbody=document.getElementById("membersTable");const res=await fetch(`${SCRIPT_URL}?action=listMembers`).then(r=>r.json()).catch(()=>({ok:false,members:[]}));if(!res.ok){tbody.innerHTML=`<tr><td colspan="7">無法載入會員</td></tr>`;return}allMembers=res.members||[];fillEmailDatalist();renderMembers(allMembers)}
+function renderMembers(list){document.getElementById("membersTable").innerHTML=list.length?list.map(m=>`<tr><td>${m.memberId||""}</td><td>${m.name||""}</td><td><a href="mailto:${m.email}">${m.email||""}</a></td><td>${m.phone||""}</td><td>${m.birthday||""}</td><td>${m.points||0}</td><td>${(m.coupons||[]).map(c=>`<span class="tag">${c}</span>`).join("")}<br><span class="pill">標籤 UI 預留</span></td></tr>`).join(""):`<tr><td colspan="7">目前沒有會員</td></tr>`}
+function filterMembers(){const email=document.getElementById("memberSearchEmail").value.trim().toLowerCase();if(!email){renderMembers(allMembers);return}renderMembers(allMembers.filter(m=>(m.email||"").toLowerCase().includes(email)))}
+async function addPoints(){const email=document.getElementById("pointsEmail").value.trim(),points=Number(document.getElementById("pointsValue").value||0),msg=document.getElementById("pointsMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"addPoints",email,points})}).then(r=>r.json()).catch(()=>({ok:false}));msg.textContent=res.ok?`已完成加點，目前點數：${res.points}`:(res.message||"加點失敗");if(res.ok)loadMembers()}
+async function grantCoupon(){const email=document.getElementById("couponEmailAdmin").value.trim(),couponCode=document.getElementById("couponCodeAdmin").value,msg=document.getElementById("couponMsgAdmin");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"grantCoupon",email,couponCode})}).then(r=>r.json()).catch(()=>({ok:false}));msg.textContent=res.ok?"已成功發送優惠券":(res.message||"發送失敗");if(res.ok)loadMembers()}
+async function createCouponRule(){
+  const payload={
+    action:"createCouponRule",
+    couponCode:document.getElementById("customCouponCode").value.trim(),
+    ruleText:document.getElementById("customCouponRule").value.trim(),
+    discountType:document.getElementById("customCouponType").value,
+    discountValue:Number(document.getElementById("customCouponValue").value||0),
+    minSpend:Number(document.getElementById("customCouponMinSpend").value||0)
+  };
+  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(payload)}).then(r=>r.json()).catch(()=>({ok:false,message:"建立失敗"}));
+  document.getElementById("customCouponMsg").textContent=res.message||(res.ok?"已建立":"建立失敗");
+  if(res.ok){document.getElementById("customCouponCode").value='';document.getElementById("customCouponRule").value='';document.getElementById("customCouponValue").value='';document.getElementById("customCouponMinSpend").value='';loadCouponRules();}
+}
+async function loadCouponRules(){
+  const res=await fetch(`${SCRIPT_URL}?action=listCouponRules`).then(r=>r.json()).catch(()=>({ok:false,rules:[]}));
+  const rules=res.rules||[];
+  const options=rules.map(r=>`<option value="${r.couponCode}">${r.couponCode}</option>`).join('') || '<option value="">目前沒有優惠券</option>';
+  document.getElementById("couponOverview").innerHTML=rules.length?rules.map(r=>`<div class="detail-box"><strong>${r.couponCode}</strong><br>${r.ruleText||''}<br>型態：${r.discountType||''} / 數值：${r.discountValue||0} / 低消：${r.minSpend||0}<br>建立時間：${r.createdAt||''}</div>`).join(''):'目前沒有優惠券規則';
+  document.getElementById("couponCodeAdmin").innerHTML=options;
+  const bulk=document.getElementById("couponCodeBulk"); if(bulk) bulk.innerHTML=options;
+}
+async function deleteAnyOrder(orderId){
+  if(!confirm("確定要刪除此訂單嗎？")) return;
+  await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"updateOrderStatus",orderId,orderStatus:"已取消"})}).then(r=>r.json()).catch(()=>({ok:false}));
+  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"deleteCancelledOrder",orderId})}).then(r=>r.json()).catch(()=>({ok:false,message:"刪除失敗"}));
+  alert(res.ok?"已刪除訂單":(res.message||"刪除失敗"));
+  if(res.ok) loadOrders();
+}
+async function closePickupDate(){const date=document.getElementById("closedDateInput").value,note=document.getElementById("closedDateNote").value.trim(),msg=document.getElementById("dateMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"closePickupDate",date,note})}).then(r=>r.json()).catch(()=>({ok:false,message:"設定失敗"}));msg.textContent=res.message||(res.ok?"已關閉日期":"設定失敗");loadClosedDatesOverview();}
+async function loadClosedDatesOverview(){
+  const res=await fetch(`${SCRIPT_URL}?action=getClosedDates`).then(r=>r.json()).catch(()=>({ok:false,dates:[]}));
+  const dates=res.dates||[];
+  document.getElementById("closedDatesOverview").innerHTML=dates.length?dates.map(d=>`<span class="tag">${d.date}${d.note?'｜'+d.note:''}</span>`).join(''):'目前沒有關閉日期';
+}
+const PRODUCT_LABELS={basque4:'原味巴斯克 4吋',basque6:'原味巴斯克 6吋',basque8:'原味巴斯克 8吋',matcha4:'抹茶巴斯克 4吋',matcha6:'抹茶巴斯克 6吋',matcha8:'抹茶巴斯克 8吋',madeleine8:'瑪德蓮 8入',madeleine10:'瑪德蓮 10入',madeleine12:'瑪德蓮 12入'};
+async function loadInventoryEditor(){
+  const date=document.getElementById("inventoryDate").value;
+  if(!date){document.getElementById("inventoryMsg").textContent='請先選擇日期';return;}
+  const res=await fetch(`${SCRIPT_URL}?action=getInventory&date=${encodeURIComponent(date)}`).then(r=>r.json()).catch(()=>({ok:false,inventory:[]}));
+  let map={};
+  const defaults={basque4:6,basque6:6,basque8:6,matcha4:6,matcha6:6,matcha8:6,madeleine8:10,madeleine10:10,madeleine12:10};
+  Object.keys(defaults).forEach(k=>map[k]=defaults[k]);
+  if(res.ok){
+    if(Array.isArray(res.inventory)){res.inventory.filter(r=>r.date===date).forEach(r=>map[r.productKey]=Number(r.remainingQty||0));}
+    else if(res.productKey){map[res.productKey]=Number(res.remainingQty||0);}
+  }
+  document.getElementById("inventoryEditor").innerHTML=Object.keys(PRODUCT_LABELS).map(k=>`<div class="inventory-grid"><div>${PRODUCT_LABELS[k]}</div><input id="inv_${k}" type="number" value="${map[k] ?? 0}"><button class="btn-sm" onclick="saveInventoryRow('${k}')">儲存</button></div>`).join('');
+}
+async function saveInventoryRow(productKey){
+  const date=document.getElementById("inventoryDate").value;
+  const remainingQty=Number(document.getElementById(`inv_${productKey}`).value||0);
+  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"saveInventory",date,productKey,remainingQty})}).then(r=>r.json()).catch(()=>({ok:false,message:"儲存失敗"}));
+  document.getElementById("inventoryMsg").textContent=res.message||(res.ok?"已儲存":"儲存失敗");
+}
+async function createTag(){
+  const tagName=document.getElementById("tagName").value.trim();
+  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"createTag",tagName})}).then(r=>r.json()).catch(()=>({ok:false,message:"建立失敗"}));
+  document.getElementById("tagMsg").textContent=res.message||(res.ok?"已建立":"建立失敗");
+  if(res.ok){document.getElementById("tagName").value='';loadTags();}
+}
+async function loadTags(){
+  const res=await fetch(`${SCRIPT_URL}?action=listTags`).then(r=>r.json()).catch(()=>({ok:false,tags:[]}));
+  const tags=res.tags||[];
+  const options=tags.map(t=>`<option value="${t.tagName}">${t.tagName}</option>`).join('') || '<option value="">目前沒有標籤</option>';
+  document.getElementById("tagsOverview").innerHTML=tags.length?tags.map(t=>`<span class="tag">${t.tagName}</span>`).join(''):'目前沒有標籤';
+  document.getElementById("assignTagName").innerHTML=options;
+  const p=document.getElementById("pointsTagBulk"); if(p) p.innerHTML=options;
+  const c=document.getElementById("couponTagBulk"); if(c) c.innerHTML=options;
+}
+async function assignTag(){
+  const email=document.getElementById("tagMemberEmail").value.trim();
+  const tagName=document.getElementById("assignTagName").value;
+  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"assignTag",email,tagName})}).then(r=>r.json()).catch(()=>({ok:false,message:"指派失敗"}));
+  alert(res.ok?"已指派標籤":(res.message||"指派失敗"));
+  if(res.ok) loadMembers();
+}
+async function bulkAddPointsByTag(){
+  const tag=document.getElementById("pointsTagBulk").value;
+  const points=Number(document.getElementById("pointsBulkValue").value||0);
+  const targets=allMembers.filter(m=>(m.tags||[]).includes(tag));
+  if(!tag||!targets.length){document.getElementById("pointsMsg").textContent="找不到這個標籤對應的會員";return;}
+  let ok=0;
+  for(const m of targets){
+    const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"addPoints",email:m.email,points})}).then(r=>r.json()).catch(()=>({ok:false}));
+    if(res.ok) ok++;
+  }
+  document.getElementById("pointsMsg").textContent=`已完成 ${ok}/${targets.length} 位會員點數更新`;
+  loadMembers();
+}
+async function bulkGrantCouponByTag(){
+  const tag=document.getElementById("couponTagBulk").value;
+  const couponCode=document.getElementById("couponCodeBulk").value;
+  const targets=allMembers.filter(m=>(m.tags||[]).includes(tag));
+  if(!tag||!targets.length){document.getElementById("couponMsgAdmin").textContent="找不到這個標籤對應的會員";return;}
+  let ok=0;
+  for(const m of targets){
+    const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"grantCoupon",email:m.email,couponCode})}).then(r=>r.json()).catch(()=>({ok:false}));
+    if(res.ok) ok++;
+  }
+  document.getElementById("couponMsgAdmin").textContent=`已完成 ${ok}/${targets.length} 位會員優惠券發送`;
+  loadMembers();
+}
+async function updateAdminCredentials(){const payload={action:"updateAdminCredentials",currentUsername:document.getElementById("currentAdminUsername").value.trim(),currentPassword:document.getElementById("currentAdminPassword").value.trim(),newUsername:document.getElementById("newAdminUsername").value.trim(),newPassword:document.getElementById("newAdminPassword").value.trim()};const msg=document.getElementById("adminMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(payload)}).then(r=>r.json()).catch(()=>({ok:false,message:"更新失敗"}));msg.textContent=res.message||(res.ok?"更新成功":"更新失敗")}
+if(sessionStorage.getItem("lm_admin_logged_in")==="1"){document.getElementById("loginView").classList.add("hidden");document.getElementById("dashboardView").classList.remove("hidden");loadMembers();loadOrders();loadCouponRules();loadTags();loadClosedDatesOverview();}
+</script>
+</body></html>

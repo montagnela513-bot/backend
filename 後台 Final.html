@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>La Montagne Admin Ultimate Plus</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Noto+Serif+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&amp;family=Noto+Serif+TC:wght@300;400;500&amp;display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f5f6f2;--card:#fff;--text:#2b2b2b;--muted:#767676;--line:#e7e7e2;--brand:#6f8f74;--shadow:0 10px 30px rgba(0,0,0,.06);--radius:14px}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Serif TC",serif}
@@ -13,7 +13,7 @@
 input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-family:inherit;margin-bottom:10px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.login-box{max-width:440px;margin:80px auto;background:#fff;box-shadow:var(--shadow);border-radius:16px;padding:28px}.hidden{display:none!important}.tag{display:inline-block;background:#eef3ee;border-radius:999px;padding:4px 10px;font-size:12px;margin:2px 6px 2px 0}
 .password-wrap{position:relative}.password-wrap input{padding-right:92px}.toggle-pass-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:#eef2ed;color:#455;border:none;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}
-.filter-bar{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;margin-bottom:12px}.detail-box{background:#fafaf7;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}.inventory-grid{display:grid;grid-template-columns:1.5fr .7fr auto;gap:10px;align-items:center}.subtle{font-size:12px;color:var(--muted)}.status-actions{display:flex;gap:8px;align-items:center}.pill{display:inline-block;background:#eef2ed;border-radius:999px;padding:4px 10px;font-size:12px}
+.filter-bar{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto auto;gap:10px;margin-bottom:12px}.detail-box{background:#fafaf7;border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:12px}.inventory-grid{display:grid;grid-template-columns:1.5fr .7fr auto;gap:10px;align-items:center}.subtle{font-size:12px;color:var(--muted)}.status-actions{display:flex;gap:8px;align-items:center}.pill{display:inline-block;background:#eef2ed;border-radius:999px;padding:4px 10px;font-size:12px}.order-link{font-weight:600;color:#36533c;background:#edf3ed;max-width:132px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 18px}.detail-line{padding:8px 0;border-bottom:1px solid var(--line)}.items-list{margin-top:12px;display:grid;gap:8px}.item-row{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px}.status-refund{background:#f7e9e7;color:#8b3328}.stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.stat-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.stat-card strong{display:block;font-size:22px;margin-top:6px}.tag button{border:none;background:transparent;color:#5b714d;cursor:pointer;margin-left:6px}
 @media (max-width:960px){.grid{grid-template-columns:1fr}.filter-bar,.row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -32,6 +32,8 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px
     <div class="grid">
       <div class="card menu">
         <button onclick="showPanel('orders')">訂單列表</button>
+        <button onclick="showPanel('completed')">已完成訂單</button>
+        <button onclick="showPanel('refunded')">已退款 / 已取消訂單</button>
         <button onclick="showPanel('members')">會員列表</button>
         <button onclick="showPanel('points')">發送點數</button>
         <button onclick="showPanel('coupon')">優惠券管理</button>
@@ -47,19 +49,46 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px
           <div class="filter-bar">
             <input id="orderSearchEmail" list="memberEmailList" placeholder="Email">
             <input id="orderSearchId" placeholder="訂單編號">
-            <select id="orderPaymentFilter"><option value="">全部付款狀態</option><option value="未付款">未付款</option><option value="已回報待核帳">已回報待核帳</option><option value="已付款">已付款</option><option value="已取消">已取消</option></select>
+            <input id="orderSearchDate" type="date" title="取貨日期">
+            <select id="orderPaymentFilter"><option value="">全部付款狀態</option><option value="未付款">未付款</option><option value="已回報待核帳">已回報待核帳</option><option value="已付款">已付款</option><option value="待退款">待退款</option><option value="已取消">已取消</option></select>
             <select id="orderStatusFilter"><option value="">全部訂單狀態</option><option value="待確認">待確認</option><option value="製作中">製作中</option><option value="可取貨">可取貨</option><option value="已完成">已完成</option><option value="已取消">已取消</option></select>
+            <select id="orderSortMode"><option value="createdDesc">最新建立</option><option value="pickupAsc">取貨日期升冪</option></select>
             <button class="btn secondary" style="width:auto" onclick="loadOrders()">篩選</button>
+            <button class="btn secondary" style="width:auto" onclick="clearOrderFilters()">總覽</button>
           </div>
           <div style="overflow:auto"><table><thead><tr><th>訂單編號</th><th>客人</th><th>取貨</th><th>金額</th><th>付款狀態</th><th>訂單狀態</th><th>操作</th></tr></thead><tbody id="ordersTable"></tbody></table></div>
           <div id="orderDetailBox" class="detail-box hidden"></div>
         </div>
 
+        <div id="completedPanel" class="hidden">
+          <h2>已完成訂單</h2>
+          <div class="row">
+            <select id="completedMonth"></select>
+            <button class="btn secondary" style="width:auto" onclick="loadCompletedOrders()">查看完成訂單</button>
+          </div>
+          <div id="completedStats" class="stats-grid" style="margin:12px 0"></div>
+          <div style="overflow:auto"><table><thead><tr><th>訂單編號</th><th>客人</th><th>取貨時間</th><th>金額</th><th>操作</th></tr></thead><tbody id="completedTable"></tbody></table></div>
+          <div id="completedProductStats" class="detail-box"></div>
+        </div>
+
+        <div id="refundedPanel" class="hidden">
+          <h2>已退款 / 已取消訂單</h2>
+          <div class="row">
+            <select id="refundStatusFilter" onchange="loadRefundedOrders()">
+              <option value="">全部取消 / 退款</option>
+              <option value="待退款">待退款</option>
+              <option value="已取消">已取消</option>
+            </select>
+            <button class="btn secondary" style="width:auto" onclick="loadRefundedOrders()">重新整理</button>
+          </div>
+          <div style="overflow:auto"><table><thead><tr><th>訂單編號</th><th>客人</th><th>取貨時間</th><th>金額</th><th>狀態</th><th>操作</th></tr></thead><tbody id="refundedTable"></tbody></table></div>
+        </div>
+
         <div id="membersPanel" class="hidden">
           <h2>會員列表</h2>
-          <div class="row"><div><input id="memberSearchEmail" list="memberEmailList" placeholder="可直接輸入或下拉選會員"><button class="btn secondary" onclick="filterMembers()">搜尋會員</button></div><button class="btn secondary" style="width:auto" onclick="loadMembers()">重新整理會員</button></div>
+          <div class="row"><div><input id="memberSearchEmail" list="memberEmailList" placeholder="可直接輸入或下拉選會員"><button class="btn secondary" onclick="filterMembers()">搜尋會員</button></div><div><select id="memberGenderFilter" onchange="filterMembers()"><option value="">全部性別</option><option value="女">女</option><option value="男">男</option><option value="不願透露">不願透露</option></select><button class="btn secondary" onclick="loadMembers()">重新整理會員</button></div></div>
           <datalist id="memberEmailList"></datalist>
-          <div style="overflow:auto"><table><thead><tr><th>會員編號</th><th>姓名</th><th>Email</th><th>手機</th><th>生日</th><th>點數</th><th>優惠券 / 標籤</th></tr></thead><tbody id="membersTable"></tbody></table></div>
+          <div style="overflow:auto"><table><thead><tr><th>會員編號</th><th>姓名</th><th>性別</th><th>Email</th><th>手機</th><th>生日</th><th>點數</th><th>優惠券 / 標籤</th></tr></thead><tbody id="membersTable"></tbody></table></div>
         </div>
 
         <div id="pointsPanel" class="hidden">
@@ -95,6 +124,7 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px
               <input id="customCouponValue" type="number" placeholder="折扣值，例如 200 或 10">
             </div>
             <input id="customCouponMinSpend" type="number" placeholder="低消，例如 1000">
+            <input id="customCouponExpiryDate" type="date" placeholder="有效期限">
             <button class="btn secondary" onclick="createCouponRule()">建立優惠券規則</button>
             <div id="customCouponMsg" class="muted"></div>
           </div>
@@ -172,6 +202,11 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px
           <input id="newAdminUsername" placeholder="新帳號">
           <div class="password-wrap"><input id="newAdminPassword" type="password" placeholder="新密碼"><button type="button" class="toggle-pass-btn" onclick="togglePassword('newAdminPassword', this)">顯示</button></div>
           <button class="btn" onclick="updateAdminCredentials()">更新後台帳密</button><div id="adminMsg" class="muted" style="margin-top:10px"></div>
+          <div class="detail-box" style="margin-top:18px">
+            <strong>Beta 測試資料歸零</strong>
+            <p class="muted">會清空會員、訂單、點數、優惠券領取、庫存、佇列與外部營收表測試資料，保留表頭與後台設定。</p>
+            <button class="btn secondary" onclick="resetBetaData()">一鍵歸零測試資料</button>
+          </div>
         </div>
       </div>
     </div>
@@ -179,68 +214,118 @@ input,select,textarea{width:100%;border:1px solid var(--line);border-radius:10px
 </div>
 
 <script>
-const SCRIPT_URL="https://script.google.com/macros/s/AKfycbyaw7kRGqiMvRzjwjQOTABwslQPd2Ykn7_QezJjBKdwedfP3jLyWIl9cg2Uarz-OZJ3ig/exec";let allOrders=[],allMembers=[],pendingStatusChanges={};
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzo9k2Ugc-yXhBr8VQDSg_uXaS8Mn0lcLgaNppMmtK9R83wvLsUxkBZTubcWCQ34fWdUg/exec";let allOrders=[],allMembers=[],pendingStatusChanges={},openOrderDetailId="",completedOrdersCache=[],openCompletedOrderDetailId="",refundedOrdersCache=[],openRefundedOrderDetailId="";
 function togglePassword(id,btn){const i=document.getElementById(id);if(i.type==='password'){i.type='text';btn.textContent='隱藏'}else{i.type='password';btn.textContent='顯示'}}
-function showPanel(name){["orders","members","points","coupon","inventory","timeslots","segments","admin"].forEach(k=>document.getElementById(`${k}Panel`).classList.add("hidden"));document.getElementById(name+"Panel").classList.remove("hidden")}
-async function adminLogin(){const username=document.getElementById("adminUsername").value.trim(),password=document.getElementById("adminPassword").value.trim(),msg=document.getElementById("loginMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"adminLogin",username,password})}).then(r=>r.json()).catch(()=>({ok:false}));if(!res.ok){msg.textContent="帳號或密碼錯誤";return}sessionStorage.setItem("lm_admin_logged_in","1");document.getElementById("loginView").classList.add("hidden");document.getElementById("dashboardView").classList.remove("hidden");await loadMembers();await loadOrders()}
+function showPanel(name){["orders","completed","refunded","members","points","coupon","inventory","timeslots","segments","admin"].forEach(k=>document.getElementById(`${k}Panel`).classList.add("hidden"));document.getElementById(name+"Panel").classList.remove("hidden");if(name==="completed") loadCompletedOrders();if(name==="refunded") loadRefundedOrders();}
+async function loadAdminBootstrapData(){await Promise.all([loadMembers(),loadOrders(),loadCouponRules(),loadTags(),loadClosedDatesOverview()]);}
+async function adminLogin(){const username=document.getElementById("adminUsername").value.trim(),password=document.getElementById("adminPassword").value.trim(),msg=document.getElementById("loginMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"adminLogin",username,password})}).then(r=>r.json()).catch(()=>({ok:false}));if(!res.ok){msg.textContent="帳號或密碼錯誤";return}sessionStorage.setItem("lm_admin_logged_in","1");document.getElementById("loginView").classList.add("hidden");document.getElementById("dashboardView").classList.remove("hidden");await loadAdminBootstrapData()}
 function logoutAdmin(){sessionStorage.removeItem("lm_admin_logged_in");location.reload()}
 function fillEmailDatalist(){document.getElementById("memberEmailList").innerHTML=allMembers.map(m=>`<option value="${m.email}">${m.name}</option>`).join("")}
-function renderPaymentOptions(current){const opts=["未付款","已回報待核帳","已付款","已取消"];return opts.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("")}
+function renderPaymentOptions(current){const opts=["未付款","已回報待核帳","已付款","待退款","已取消"];return opts.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("")}
 function renderOrderOptions(current){const opts=["待確認","製作中","可取貨","已完成","已取消"];return opts.map(v=>`<option value="${v}" ${v===current?"selected":""}>${v}</option>`).join("")}
-async function loadOrders(){const email=document.getElementById("orderSearchEmail").value.trim(),orderId=document.getElementById("orderSearchId").value.trim(),paymentFilter=document.getElementById("orderPaymentFilter").value,statusFilter=document.getElementById("orderStatusFilter").value,tbody=document.getElementById("ordersTable");const res=await fetch(`${SCRIPT_URL}?action=listOrders${email?`&email=${encodeURIComponent(email)}`:""}${orderId?`&orderId=${encodeURIComponent(orderId)}`:""}`).then(r=>r.json()).catch(()=>({ok:false,orders:[]}));if(!res.ok){tbody.innerHTML=`<tr><td colspan="7">無法載入訂單</td></tr>`;return}allOrders=(res.orders||[]).filter(o=>(!paymentFilter||o.paymentStatus===paymentFilter)&&(!statusFilter||o.orderStatus===statusFilter));tbody.innerHTML=allOrders.length?allOrders.map(o=>`<tr><td><button class="btn-sm" onclick='showOrderDetail(${JSON.stringify(o).replace(/'/g,"&apos;")})'>${o.orderId||""}</button></td><td>${o.customerName||""}<br><a href="mailto:${o.email}">${o.email||""}</a></td><td>${o.pickupDate||""} ${o.pickupTime||""}<br><span class="muted">${o.pickupMethod||""}</span></td><td>NT$ ${Number(o.finalTotal||0).toLocaleString("zh-TW")}</td><td><select onchange="stageStatusChange('${o.orderId}','payment',this.value)">${renderPaymentOptions(o.paymentStatus)}</select></td><td><select onchange="stageStatusChange('${o.orderId}','order',this.value)">${renderOrderOptions(o.orderStatus)}</select></td><td><button class="btn-sm" onclick="confirmStatusChange('${o.orderId}','${o.email}')">確認變更</button><button class="btn-sm" onclick="deleteAnyOrder('${o.orderId}')">刪除</button></td></tr>`).join(""):`<tr><td colspan="7">目前沒有訂單</td></tr>`}
+function formatAdminPickupDateTime(order){const date=String(order.pickupDate||'').replace(/-/g,'/');const time=String(order.pickupTime||'').slice(0,5);return [date,time].filter(Boolean).join(' ')}
+function formatAdminBirthday(value){const text=String(value||"");return text?text.split('T')[0].replace(/-/g,'/'):""}
+function getOrderById(orderId){return allOrders.find(o=>String(o.orderId||'')===String(orderId||''))}
+function getCompletedOrderById(orderId){return completedOrdersCache.find(o=>String(o.orderId||'')===String(orderId||''))}
+function escapeAttr(v){return String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
+function renderAdminOrderDetailHtml(order){const items=(order.items||[]).map(i=>`<div class="item-row"><strong>${i.name||""}</strong><br><span class="muted">${[i.sizeLabel,i.mousse,(i.flavors||[]).length?'口味：'+i.flavors.join('、'):''].filter(Boolean).join('｜')}</span><br>數量 x${i.qty||0}｜小計 NT$ ${Number((i.price||0)*(i.qty||0)).toLocaleString("zh-TW")}</div>`).join("")||"<div class='item-row'>無明細</div>";return `<div class="detail-grid"><div class="detail-line"><strong>訂單編號</strong><br>${order.orderId||""}</div><div class="detail-line"><strong>取貨時間</strong><br>${formatAdminPickupDateTime(order)}</div><div class="detail-line"><strong>客人</strong><br>${order.customerName||""} / ${order.phone||""}</div><div class="detail-line"><strong>Email</strong><br><a href="mailto:${order.email}">${order.email||""}</a></div><div class="detail-line"><strong>付款狀態</strong><br>${order.paymentStatus||""}</div><div class="detail-line"><strong>訂單狀態</strong><br>${order.orderStatus||""}</div><div class="detail-line"><strong>金額</strong><br>原價 NT$ ${Number(order.originalTotal||0).toLocaleString("zh-TW")}｜折扣 NT$ ${Number(order.discount||0).toLocaleString("zh-TW")}｜實付 NT$ ${Number(order.finalTotal||0).toLocaleString("zh-TW")}</div><div class="detail-line"><strong>點數</strong><br>使用 ${order.usedPoints||0} 點｜入帳 ${order.earnedPoints||0} 點</div><div class="detail-line"><strong>匯款人</strong><br>${order.payerName||"尚未填寫"}</div><div class="detail-line"><strong>帳號後五碼 / 匯款時間</strong><br>${order.bankLast5||"尚未填寫"} / ${order.transferTime||"尚未填寫"}</div><div class="detail-line" style="grid-column:1/-1"><strong>客人備註</strong><br>${order.customerNote||"無"}</div></div><div class="items-list">${items}</div>`}
+function clearOrderFilters(){["orderSearchEmail","orderSearchId","orderSearchDate"].forEach(id=>document.getElementById(id).value="");document.getElementById("orderPaymentFilter").value="";document.getElementById("orderStatusFilter").value="";document.getElementById("orderSortMode").value="createdDesc";loadOrders();}
+async function loadOrders(){const email=document.getElementById("orderSearchEmail").value.trim(),orderId=document.getElementById("orderSearchId").value.trim(),pickupDate=document.getElementById("orderSearchDate").value,paymentFilter=document.getElementById("orderPaymentFilter").value,statusFilter=document.getElementById("orderStatusFilter").value,sortMode=document.getElementById("orderSortMode").value,tbody=document.getElementById("ordersTable");const res=await fetch(`${SCRIPT_URL}?action=listOrders${email?`&email=${encodeURIComponent(email)}`:""}${orderId?`&orderId=${encodeURIComponent(orderId)}`:""}${pickupDate?`&pickupDate=${encodeURIComponent(pickupDate)}`:""}`).then(r=>r.json()).catch(()=>({ok:false,orders:[]}));if(!res.ok){tbody.innerHTML=`<tr><td colspan="7">無法載入訂單</td></tr>`;return}allOrders=(res.orders||[]).filter(o=>o.orderStatus!=="已完成"&&o.orderStatus!=="已取消").filter(o=>(!paymentFilter||o.paymentStatus===paymentFilter)&&(!statusFilter||o.orderStatus===statusFilter));if(sortMode==="pickupAsc") allOrders.sort((a,b)=>String(a.pickupDateTimeDisplay||formatAdminPickupDateTime(a)).localeCompare(String(b.pickupDateTimeDisplay||formatAdminPickupDateTime(b))));tbody.innerHTML=allOrders.length?allOrders.map(o=>`<tr><td style="max-width:140px"><button class="btn-sm order-link" title="${escapeAttr(o.orderId)}" onclick="showOrderDetailById('${escapeAttr(o.orderId)}')">${o.orderId||""}</button></td><td>${o.customerName||""}<br><a href="mailto:${o.email}">${o.email||""}</a></td><td>${formatAdminPickupDateTime(o)}<br><span class="muted">${o.pickupMethod||""}</span></td><td>NT$ ${Number(o.finalTotal||0).toLocaleString("zh-TW")}</td><td><select class="${['待退款'].includes(o.paymentStatus)?'status-refund':''}" onchange="stageStatusChange('${escapeAttr(o.orderId)}','payment',this.value)">${renderPaymentOptions(o.paymentStatus)}</select></td><td><select onchange="stageStatusChange('${escapeAttr(o.orderId)}','order',this.value)">${renderOrderOptions(o.orderStatus)}</select></td><td><button class="btn-sm" onclick="confirmStatusChange('${escapeAttr(o.orderId)}')">確認變更</button><button class="btn-sm" onclick="deleteAnyOrder('${escapeAttr(o.orderId)}')">刪除</button></td></tr>`).join(""):`<tr><td colspan="7">目前沒有進行中訂單</td></tr>`}
 function stageStatusChange(orderId,type,value){if(!pendingStatusChanges[orderId])pendingStatusChanges[orderId]={};pendingStatusChanges[orderId][type]=value}
-async function confirmStatusChange(orderId,email){const pending=pendingStatusChanges[orderId]||{};if(!pending.payment&&!pending.order){alert("請先選擇要更新的狀態");return}if(!confirm("確定要更新此訂單狀態嗎？"))return;const payload={action:"updateOrderStatus",orderId,paymentStatus:pending.payment||"",orderStatus:pending.order||""};const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(payload)}).then(r=>r.json()).catch(()=>({ok:false,message:"更新失敗"}));alert(res.ok?"狀態已更新，請記得由後端寄信通知消費者":(res.message||"更新失敗"));if(res.ok)delete pendingStatusChanges[orderId];loadOrders()}
-function showOrderDetail(order){document.getElementById("orderDetailBox").classList.remove("hidden");document.getElementById("orderDetailBox").innerHTML=`<strong>訂單編號：</strong>${order.orderId}<br><strong>客人：</strong>${order.customerName||""} / <a href="mailto:${order.email}">${order.email||""}</a><br><strong>電話：</strong>${order.phone||""}<br><strong>取貨日期：</strong>${order.pickupDate||""} ${order.pickupTime||""}<br><strong>付款狀態：</strong>${order.paymentStatus||""}<br><strong>訂單狀態：</strong>${order.orderStatus||""}<br><strong>已使用點數：</strong>${order.usedPoints||0}<br><strong>匯款人：</strong>${order.payerName||""}<br><strong>帳號後五碼：</strong>${order.bankLast5||""}<br><strong>匯款時間：</strong>${order.transferTime||""}<br><strong>明細：</strong>${(order.items||[]).map(i=>`<div>• ${i.name}｜${i.sizeLabel||""}${i.mousse?"｜"+i.mousse:""}｜x${i.qty}</div>`).join("")||"<div>無</div>"}`}
+async function confirmStatusChange(orderId){const pending=pendingStatusChanges[orderId]||{};if(!pending.payment&&!pending.order){alert("請先選擇要更新的狀態");return}if(!confirm("確定要更新此訂單狀態嗎？"))return;const cancelPaymentStatuses=["待退款","已取消"];const forcedOrderStatus=cancelPaymentStatuses.includes(pending.payment)?"已取消":(pending.payment==="已付款"&&!pending.order?"製作中":"");const payload={action:"updateOrderStatus",orderId,paymentStatus:pending.payment||"",orderStatus:forcedOrderStatus||pending.order||""};const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(payload)}).then(r=>r.json()).catch(()=>({ok:false,message:"更新失敗"}));alert(res.ok?"狀態已更新":(res.message||"更新失敗"));if(res.ok)delete pendingStatusChanges[orderId];loadOrders();if(document.getElementById("completedPanel")&&!document.getElementById("completedPanel").classList.contains("hidden")) loadCompletedOrders();if(document.getElementById("refundedPanel")&&!document.getElementById("refundedPanel").classList.contains("hidden")) loadRefundedOrders();}
+function showOrderDetailById(orderId){const box=document.getElementById("orderDetailBox");if(openOrderDetailId===orderId&&!box.classList.contains("hidden")){box.classList.add("hidden");openOrderDetailId="";return;}const order=getOrderById(orderId);if(!order){alert("找不到訂單明細，請重新整理訂單列表");return;}openOrderDetailId=orderId;showOrderDetail(order)}
+function closeOrderDetail(){document.getElementById("orderDetailBox").classList.add("hidden");openOrderDetailId=""}
+function showOrderDetail(order){const box=document.getElementById("orderDetailBox");box.classList.remove("hidden");box.innerHTML=`<div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><h3 style="margin:0 0 12px">訂單明細</h3><button class="btn-sm" onclick="closeOrderDetail()">收合</button></div>${renderAdminOrderDetailHtml(order)}`}
 async function loadMembers(){const tbody=document.getElementById("membersTable");const res=await fetch(`${SCRIPT_URL}?action=listMembers`).then(r=>r.json()).catch(()=>({ok:false,members:[]}));if(!res.ok){tbody.innerHTML=`<tr><td colspan="7">無法載入會員</td></tr>`;return}allMembers=res.members||[];fillEmailDatalist();renderMembers(allMembers)}
-function renderMembers(list){document.getElementById("membersTable").innerHTML=list.length?list.map(m=>`<tr><td>${m.memberId||""}</td><td>${m.name||""}</td><td><a href="mailto:${m.email}">${m.email||""}</a></td><td>${m.phone||""}</td><td>${m.birthday||""}</td><td>${m.points||0}</td><td>${(m.coupons||[]).map(c=>`<span class="tag">${c}</span>`).join("")}<br><span class="pill">標籤 UI 預留</span></td></tr>`).join(""):`<tr><td colspan="7">目前沒有會員</td></tr>`}
-function filterMembers(){const email=document.getElementById("memberSearchEmail").value.trim().toLowerCase();if(!email){renderMembers(allMembers);return}renderMembers(allMembers.filter(m=>(m.email||"").toLowerCase().includes(email)))}
-async function addPoints(){const email=document.getElementById("pointsEmail").value.trim(),points=Number(document.getElementById("pointsValue").value||0),msg=document.getElementById("pointsMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"addPoints",email,points})}).then(r=>r.json()).catch(()=>({ok:false}));msg.textContent=res.ok?`已完成加點，目前點數：${res.points}`:(res.message||"加點失敗");if(res.ok)loadMembers()}
-async function grantCoupon(){const email=document.getElementById("couponEmailAdmin").value.trim(),couponCode=document.getElementById("couponCodeAdmin").value,msg=document.getElementById("couponMsgAdmin");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"grantCoupon",email,couponCode})}).then(r=>r.json()).catch(()=>({ok:false}));msg.textContent=res.ok?"已成功發送優惠券":(res.message||"發送失敗");if(res.ok)loadMembers()}
+function renderMembers(list){document.getElementById("membersTable").innerHTML=list.length?list.map(m=>`<tr><td>${m.memberId||""}</td><td>${m.name||""}</td><td>${m.gender||"—"}</td><td><a href="mailto:${m.email}">${m.email||""}</a></td><td>${m.phone||""}</td><td>${formatAdminBirthday(m.birthday)}</td><td>${m.points||0}</td><td>${(m.coupons||[]).map(c=>`<span class="tag">${c}</span>`).join("")||'<span class="muted">無優惠券</span>'}<br>${(m.tags||[]).map(t=>`<span class="pill">${t}</span>`).join("")||'<span class="muted">無標籤</span>'}</td></tr>`).join(""):`<tr><td colspan="8">目前沒有會員</td></tr>`}
+function filterMembers(){const email=document.getElementById("memberSearchEmail").value.trim().toLowerCase(),gender=document.getElementById("memberGenderFilter").value;if(!email&&!gender){renderMembers(allMembers);return}renderMembers(allMembers.filter(m=>(!email||(m.email||"").toLowerCase().includes(email))&&(!gender||String(m.gender||"")===gender)))}
+async function addPoints(){const email=document.getElementById("pointsEmail").value.trim(),points=Number(document.getElementById("pointsValue").value||0),msg=document.getElementById("pointsMsg");if(!email||!Number.isFinite(points)){msg.textContent="請先填寫會員 Email 與點數";return}if(!confirm(`確認要對 ${email} 異動 ${points>0?'+':''}${points} 點嗎？`))return;const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"addPoints",email,points})}).then(r=>r.json()).catch(()=>({ok:false}));msg.textContent=res.ok?`已完成加點，目前點數：${res.points}`:(res.message||"加點失敗");if(res.ok){alert("已完成點數異動");loadMembers()}}
+async function grantCoupon(){const email=document.getElementById("couponEmailAdmin").value.trim(),couponCode=document.getElementById("couponCodeAdmin").value,msg=document.getElementById("couponMsgAdmin");if(!email||!couponCode){msg.textContent="請先選擇會員與優惠券";return}if(!confirm(`確認要發送 ${couponCode} 給 ${email} 嗎？`))return;const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"grantCoupon",email,couponCode})}).then(r=>r.json()).catch(()=>({ok:false}));msg.textContent=res.ok?"已成功發送優惠券":(res.message||"發送失敗");if(res.ok){alert(`已完成發送 ${couponCode}`);loadMembers()}}
 async function createCouponRule(){
-  const payload={
-    action:"createCouponRule",
-    couponCode:document.getElementById("customCouponCode").value.trim(),
-    ruleText:document.getElementById("customCouponRule").value.trim(),
-    discountType:document.getElementById("customCouponType").value,
-    discountValue:Number(document.getElementById("customCouponValue").value||0),
-    minSpend:Number(document.getElementById("customCouponMinSpend").value||0)
-  };
+  const payload={action:"createCouponRule",couponCode:document.getElementById("customCouponCode").value.trim(),ruleText:document.getElementById("customCouponRule").value.trim(),discountType:document.getElementById("customCouponType").value,discountValue:Number(document.getElementById("customCouponValue").value||0),minSpend:Number(document.getElementById("customCouponMinSpend").value||0),expiryDate:document.getElementById("customCouponExpiryDate").value.trim()};
   const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(payload)}).then(r=>r.json()).catch(()=>({ok:false,message:"建立失敗"}));
   document.getElementById("customCouponMsg").textContent=res.message||(res.ok?"已建立":"建立失敗");
-  if(res.ok){document.getElementById("customCouponCode").value='';document.getElementById("customCouponRule").value='';document.getElementById("customCouponValue").value='';document.getElementById("customCouponMinSpend").value='';loadCouponRules();}
+  if(res.ok){document.getElementById("customCouponCode").value='';document.getElementById("customCouponRule").value='';document.getElementById("customCouponValue").value='';document.getElementById("customCouponMinSpend").value='';document.getElementById("customCouponExpiryDate").value='';loadCouponRules();}
 }
 async function loadCouponRules(){
   const res=await fetch(`${SCRIPT_URL}?action=listCouponRules`).then(r=>r.json()).catch(()=>({ok:false,rules:[]}));
   const rules=res.rules||[];
   const options=rules.map(r=>`<option value="${r.couponCode}">${r.couponCode}</option>`).join('') || '<option value="">目前沒有優惠券</option>';
-  document.getElementById("couponOverview").innerHTML=rules.length?rules.map(r=>`<div class="detail-box"><strong>${r.couponCode}</strong><br>${r.ruleText||''}<br>型態：${r.discountType||''} / 數值：${r.discountValue||0} / 低消：${r.minSpend||0}<br>建立時間：${r.createdAt||''}</div>`).join(''):'目前沒有優惠券規則';
+  document.getElementById("couponOverview").innerHTML=rules.length?rules.map(r=>`<div class="detail-box"><strong>${r.couponCode}</strong><br>${r.ruleText||''}<br>型態：${r.discountType||''} / 數值：${r.discountValue||0} / 低消：${r.minSpend||0}<br>有效期限：${r.expiryDate?String(r.expiryDate).split('T')[0].replace(/-/g,'/'):'未設定'}<br>建立時間：${r.createdAt||''}<div style="margin-top:10px"><button class="btn-sm" onclick="deleteCouponRule('${escapeAttr(r.couponCode)}')">刪除優惠券</button></div></div>`).join(''):'目前沒有優惠券規則';
   document.getElementById("couponCodeAdmin").innerHTML=options;
   const bulk=document.getElementById("couponCodeBulk"); if(bulk) bulk.innerHTML=options;
 }
+async function deleteCouponRule(couponCode){if(!confirm(`確定要刪除 ${couponCode} 這張優惠券規則嗎？`))return;const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"deleteCouponRule",couponCode})}).then(r=>r.json()).catch(()=>({ok:false,message:"刪除失敗"}));document.getElementById("couponMsgAdmin").textContent=res.message||(res.ok?"已刪除":"刪除失敗");if(res.ok){alert(`已刪除 ${couponCode}`);loadCouponRules();}}
 async function deleteAnyOrder(orderId){
-  if(!confirm("確定要刪除此訂單嗎？")) return;
+  if(!confirm("確定要刪除此訂單嗎？這會先將狀態設為已取消，再做軟刪除。")) return;
   await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"updateOrderStatus",orderId,orderStatus:"已取消"})}).then(r=>r.json()).catch(()=>({ok:false}));
-  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"deleteCancelledOrder",orderId})}).then(r=>r.json()).catch(()=>({ok:false,message:"刪除失敗"}));
+  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"deleteOrder",orderId})}).then(r=>r.json()).catch(()=>({ok:false,message:"刪除失敗"}));
   alert(res.ok?"已刪除訂單":(res.message||"刪除失敗"));
   if(res.ok) loadOrders();
 }
 async function closePickupDate(){const date=document.getElementById("closedDateInput").value,note=document.getElementById("closedDateNote").value.trim(),msg=document.getElementById("dateMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"closePickupDate",date,note})}).then(r=>r.json()).catch(()=>({ok:false,message:"設定失敗"}));msg.textContent=res.message||(res.ok?"已關閉日期":"設定失敗");loadClosedDatesOverview();}
+function todayDateString(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 async function loadClosedDatesOverview(){
   const res=await fetch(`${SCRIPT_URL}?action=getClosedDates`).then(r=>r.json()).catch(()=>({ok:false,dates:[]}));
-  const dates=res.dates||[];
-  document.getElementById("closedDatesOverview").innerHTML=dates.length?dates.map(d=>`<span class="tag">${d.date}${d.note?'｜'+d.note:''}</span>`).join(''):'目前沒有關閉日期';
+  const today=todayDateString();
+  const dates=(res.dates||[]).filter(d=>String(d.date||'')>=today).sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));
+  document.getElementById("closedDatesOverview").innerHTML=dates.length?dates.map(d=>`<span class="tag">${d.date}${d.note?'｜'+d.note:''}<button onclick="reopenPickupDate('${d.date}')">重新開放</button></span>`).join(''):'目前沒有未來關閉日期';
 }
-const PRODUCT_LABELS={basque4:'原味巴斯克 4吋',basque6:'原味巴斯克 6吋',basque8:'原味巴斯克 8吋',matcha4:'抹茶巴斯克 4吋',matcha6:'抹茶巴斯克 6吋',matcha8:'抹茶巴斯克 8吋',madeleine8:'瑪德蓮 8入',madeleine10:'瑪德蓮 10入',madeleine12:'瑪德蓮 12入'};
+async function reopenPickupDate(date){if(!confirm(`確定要重新開放 ${date} 嗎？`))return;const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"reopenPickupDate",date})}).then(r=>r.json()).catch(()=>({ok:false,message:"重新開放失敗"}));document.getElementById("dateMsg").textContent=res.message||(res.ok?"已重新開放":"重新開放失敗");loadClosedDatesOverview();}
+function previousMonthKey(month){const parts=String(month||"").split("-").map(Number);const d=new Date(parts[0],(parts[1]||1)-2,1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function monthLabel(month){return String(month||"").replace("-"," 年 ")+" 月"}
+function fillCompletedMonthOptions(orders){
+  const select=document.getElementById("completedMonth");
+  const now=new Date();
+  const current=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const months=new Set([current]);
+  orders.forEach(o=>{const m=String(o.pickupDate||"").slice(0,7);if(m&&m<=current) months.add(m);});
+  const previous=select.value;
+  const sorted=[...months].sort().reverse();
+  select.innerHTML=sorted.map(m=>`<option value="${m}" ${m===(previous||current)?"selected":""}>${monthLabel(m)}</option>`).join("");
+  if(previous&&sorted.includes(previous)) select.value=previous;
+}
+async function loadCompletedOrders(){
+  const res=await fetch(`${SCRIPT_URL}?action=listOrders`).then(r=>r.json()).catch(()=>({ok:false,orders:[]}));
+  const all=(res.orders||[]).filter(o=>o.orderStatus==="已完成");
+  completedOrdersCache=all;
+  fillCompletedMonthOptions(all);
+  const month=document.getElementById("completedMonth")?.value||"";
+  const shown=month?all.filter(o=>String(o.pickupDate||"").startsWith(month)):all;
+  const now=new Date();
+  const currentMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const totalRevenue=all.reduce((sum,o)=>sum+Number(o.finalTotal||0),0);
+  const currentMonthRevenue=all.filter(o=>String(o.pickupDate||"").startsWith(month||currentMonth)).reduce((sum,o)=>sum+Number(o.finalTotal||0),0);
+  const previousMonth=previousMonthKey(month||currentMonth);
+  const previousMonthRevenue=all.filter(o=>String(o.pickupDate||"").startsWith(previousMonth)).reduce((sum,o)=>sum+Number(o.finalTotal||0),0);
+  const momText=previousMonthRevenue>0?`${(((currentMonthRevenue-previousMonthRevenue)/previousMonthRevenue)*100).toFixed(1)}%`:(currentMonthRevenue>0?"新月份":"0%");
+  const productStats={};
+  shown.forEach(o=>(o.items||[]).forEach(item=>{const key=[item.name,item.sizeLabel].filter(Boolean).join(" ");if(!productStats[key])productStats[key]={qty:0,revenue:0};productStats[key].qty+=Number(item.qty||0);productStats[key].revenue+=Number(item.price||0)*Number(item.qty||0);}));
+  document.getElementById("completedStats").innerHTML=`<div class="stat-card"><span class="muted">已完成總營收</span><strong>NT$ ${totalRevenue.toLocaleString("zh-TW")}</strong></div><div class="stat-card"><span class="muted">${monthLabel(month||currentMonth)}營收</span><strong>NT$ ${currentMonthRevenue.toLocaleString("zh-TW")}</strong></div><div class="stat-card"><span class="muted">MOM（相較 ${monthLabel(previousMonth)}）</span><strong>${momText}</strong></div>`;
+  document.getElementById("completedTable").innerHTML=shown.length?shown.map(o=>`<tr><td>${o.orderId||""}</td><td>${o.customerName||""}<br><span class="muted">${o.email||""}</span></td><td>${formatAdminPickupDateTime(o)}</td><td>NT$ ${Number(o.finalTotal||0).toLocaleString("zh-TW")}</td><td><button class="btn-sm" onclick="toggleCompletedOrderDetail('${escapeAttr(o.orderId)}')">${openCompletedOrderDetailId===o.orderId?'收合明細':'查看明細'}</button></td></tr>${openCompletedOrderDetailId===o.orderId?`<tr><td colspan="5"><div class="detail-box">${renderAdminOrderDetailHtml(o)}</div></td></tr>`:''}`).join(""):`<tr><td colspan="5">目前沒有已完成訂單</td></tr>`;
+  const productRows=Object.keys(productStats).sort().map(key=>`<tr><td>${key}</td><td>${productStats[key].qty}</td><td>NT$ ${productStats[key].revenue.toLocaleString("zh-TW")}</td></tr>`).join("");
+  document.getElementById("completedProductStats").innerHTML=`<strong>品項銷售紀錄</strong><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>品項</th><th>銷售數量</th><th>銷售金額</th></tr></thead><tbody>${productRows||'<tr><td colspan="3">目前沒有品項資料</td></tr>'}</tbody></table></div>`;
+}
+function toggleCompletedOrderDetail(orderId){openCompletedOrderDetailId=openCompletedOrderDetailId===orderId?"":orderId;loadCompletedOrders();}
+async function loadRefundedOrders(){
+  const res=await fetch(`${SCRIPT_URL}?action=listOrders`).then(r=>r.json()).catch(()=>({ok:false,orders:[]}));
+  const filter=document.getElementById("refundStatusFilter")?.value||"";
+  const refundStatuses=["待退款","已取消","已退款","已完成退款並聯繫"];
+  refundedOrdersCache=(res.orders||[]).filter(o=>o.orderStatus==="已取消"||refundStatuses.includes(o.paymentStatus||"")).filter(o=>!filter||o.paymentStatus===filter||o.orderStatus===filter).sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+  document.getElementById("refundedTable").innerHTML=refundedOrdersCache.length?refundedOrdersCache.map(o=>`<tr><td>${o.orderId||""}</td><td>${o.customerName||""}<br><span class="muted">${o.email||""}</span></td><td>${formatAdminPickupDateTime(o)}</td><td>NT$ ${Number(o.finalTotal||0).toLocaleString("zh-TW")}</td><td>${o.paymentStatus||""} / ${o.orderStatus||""}</td><td><button class="btn-sm" onclick="toggleRefundedOrderDetail('${escapeAttr(o.orderId)}')">${openRefundedOrderDetailId===o.orderId?'收合明細':'查看明細'}</button>${o.paymentStatus==="待退款"?`<button class="btn-sm" onclick="markRefundCompleted('${escapeAttr(o.orderId)}')">已完成退款</button>`:""}</td></tr>${openRefundedOrderDetailId===o.orderId?`<tr><td colspan="6"><div class="detail-box">${renderAdminOrderDetailHtml(o)}</div></td></tr>`:''}`).join(""):`<tr><td colspan="6">目前沒有已退款 / 已取消訂單</td></tr>`;
+}
+function toggleRefundedOrderDetail(orderId){openRefundedOrderDetailId=openRefundedOrderDetailId===orderId?"":orderId;loadRefundedOrders();}
+async function markRefundCompleted(orderId){if(!confirm("確認已完成退款並聯繫客人？"))return;const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"updateOrderStatus",orderId,paymentStatus:"已取消",orderStatus:"已取消",refundCompleted:true})}).then(r=>r.json()).catch(()=>({ok:false,message:"更新失敗"}));alert(res.ok?"已標記為完成退款":(res.message||"更新失敗"));loadRefundedOrders();loadOrders();}
+const PRODUCT_LABELS={basque4:'原味巴斯克 4吋',basque6:'原味巴斯克 6吋',basque8:'原味巴斯克 8吋',matcha4:'抹茶巴斯克 4吋',matcha6:'抹茶巴斯克 6吋',matcha8:'抹茶巴斯克 8吋',madeleine8:'瑪德蓮 8入',madeleine10:'瑪德蓮 10入',madeleine12:'瑪德蓮 12入',canele6:'可麗露 6入',canele8:'可麗露 8入',canele10:'可麗露 10入'};
 async function loadInventoryEditor(){
   const date=document.getElementById("inventoryDate").value;
   if(!date){document.getElementById("inventoryMsg").textContent='請先選擇日期';return;}
-  const res=await fetch(`${SCRIPT_URL}?action=getInventory&date=${encodeURIComponent(date)}`).then(r=>r.json()).catch(()=>({ok:false,inventory:[]}));
-  let map={};
-  const defaults={basque4:6,basque6:6,basque8:6,matcha4:6,matcha6:6,matcha8:6,madeleine8:10,madeleine10:10,madeleine12:10};
+  const res=await fetch(`${SCRIPT_URL}?action=getInventoryForDate&date=${encodeURIComponent(date)}`).then(r=>r.json()).catch(()=>({ok:false,items:[]}));
+  const map={};
+  const defaults={basque4:6,basque6:6,basque8:6,matcha4:6,matcha6:6,matcha8:6,madeleine8:8,madeleine10:10,madeleine12:12};
   Object.keys(defaults).forEach(k=>map[k]=defaults[k]);
   if(res.ok){
-    if(Array.isArray(res.inventory)){res.inventory.filter(r=>r.date===date).forEach(r=>map[r.productKey]=Number(r.remainingQty||0));}
-    else if(res.productKey){map[res.productKey]=Number(res.remainingQty||0);}
+    if(Array.isArray(res.items)){res.items.forEach(r=>map[r.productKey]=Number(r.remainingQty||0));}
   }
   document.getElementById("inventoryEditor").innerHTML=Object.keys(PRODUCT_LABELS).map(k=>`<div class="inventory-grid"><div>${PRODUCT_LABELS[k]}</div><input id="inv_${k}" type="number" value="${map[k] ?? 0}"><button class="btn-sm" onclick="saveInventoryRow('${k}')">儲存</button></div>`).join('');
 }
@@ -298,7 +383,26 @@ async function bulkGrantCouponByTag(){
   document.getElementById("couponMsgAdmin").textContent=`已完成 ${ok}/${targets.length} 位會員優惠券發送`;
   loadMembers();
 }
+async function loadTimeSlotsAdmin(){
+  const date=document.getElementById("timeslotDate").value;
+  const msg=document.getElementById("timeslotMsg");
+  if(!date){msg.textContent="請先選擇日期";return;}
+  const res=await fetch(`${SCRIPT_URL}?action=getTimeSlots&date=${encodeURIComponent(date)}`).then(r=>r.json()).catch(()=>({ok:false,slots:[]}));
+  if(!res.ok){msg.textContent=res.message||"載入失敗";return;}
+  document.getElementById("timeslotValues").value=(res.slots||[]).join(",");
+  msg.textContent="已載入該日設定";
+}
+async function saveTimeSlotsAdmin(){
+  const date=document.getElementById("timeslotDate").value;
+  const slots=document.getElementById("timeslotValues").value.split(",").map(v=>v.trim()).filter(Boolean);
+  const msg=document.getElementById("timeslotMsg");
+  if(!date){msg.textContent="請先選擇日期";return;}
+  const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"saveTimeSlots",date,slots})}).then(r=>r.json()).catch(()=>({ok:false,message:"儲存失敗"}));
+  msg.textContent=res.message||(res.ok?"已儲存":"儲存失敗");
+}
 async function updateAdminCredentials(){const payload={action:"updateAdminCredentials",currentUsername:document.getElementById("currentAdminUsername").value.trim(),currentPassword:document.getElementById("currentAdminPassword").value.trim(),newUsername:document.getElementById("newAdminUsername").value.trim(),newPassword:document.getElementById("newAdminPassword").value.trim()};const msg=document.getElementById("adminMsg");const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify(payload)}).then(r=>r.json()).catch(()=>({ok:false,message:"更新失敗"}));msg.textContent=res.message||(res.ok?"更新成功":"更新失敗")}
-if(sessionStorage.getItem("lm_admin_logged_in")==="1"){document.getElementById("loginView").classList.add("hidden");document.getElementById("dashboardView").classList.remove("hidden");loadMembers();loadOrders();loadCouponRules();loadTags();loadClosedDatesOverview();}
+async function resetBetaData(){if(!confirm("確定要歸零 Beta 測試資料嗎？會員、訂單、點數、庫存都會清空。"))return;if(!confirm("最後確認：這個動作無法復原，確定執行？"))return;const res=await fetch(SCRIPT_URL,{method:"POST",body:JSON.stringify({action:"resetBetaData"})}).then(r=>r.json()).catch(()=>({ok:false,message:"歸零失敗"}));alert(res.message||(res.ok?"已歸零":"歸零失敗"));if(res.ok){allOrders=[];allMembers=[];loadAdminBootstrapData();}}
+if(sessionStorage.getItem("lm_admin_logged_in")==="1"){document.getElementById("loginView").classList.add("hidden");document.getElementById("dashboardView").classList.remove("hidden");loadAdminBootstrapData();}
 </script>
-</body></html>
+</body>
+</html>
